@@ -29,17 +29,18 @@ let renderer;
 
   // Camera
   camera = new THREE.PerspectiveCamera(75, 2, 0.1, 100);
-  camera.position.z = 3;
+  camera.position.z = 10;
+  
+  //#region  //*=========== Skybox ===========
+  const loader = new THREE.TextureLoader();
+  const texture = loader.load("assets/images/chinese_garden.jpg", () => {
+    const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
+    rt.fromEquirectangularTexture(renderer, texture);
+    scene.background = rt.texture;
+  });
+  //#region  //*=========== Skybox ===========
 
-  {
-    const loader = new THREE.TextureLoader();
-    const texture = loader.load("assets/images/chinese_garden.jpg", () => {
-      const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
-      rt.fromEquirectangularTexture(renderer, texture);
-      scene.background = rt.texture;
-    });
-  }
-
+  //#region  //*=========== Plane ===========
   const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(15, 15, 100, 100),
     new THREE.MeshPhongMaterial({
@@ -51,7 +52,9 @@ let renderer;
   plane.rotation.x = -Math.PI / 2;
   plane.position.y = -3;
   scene.add(plane);
+  //#endregion  //*======== Plane ===========
 
+  //#region  //*=========== Cube ===========
   const cubeTexture = new THREE.TextureLoader().load("assets/images/wood.jpg");
   const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
   const cubeMaterial = new THREE.MeshPhongMaterial({
@@ -62,14 +65,17 @@ let renderer;
   cube.castShadow = true;
   cube.receiveShadow = true;
   scene.add(cube);
+  //#endregion  //*======== Cube ===========
 
   // Render
   renderer = new THREE.WebGLRenderer({ antialias: true });
 
+  //#region  //*=========== OrbitControls ===========
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.25;
   controls.enableZoom = true;
+  //#endregion  //*======== OrbitControls ===========
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
