@@ -18,6 +18,11 @@ let count = 0,
 (function init() {
   // set up three.js scene
   scene = new THREE.Scene();
+  const color = 0xffffff; // white
+  const near = 5;
+  const far = 30;
+  scene.fog = new THREE.Fog(color, near, far);
+
   //lights
   const ambientLight = new THREE.AmbientLight("white", 0.6);
   scene.add(ambientLight);
@@ -26,13 +31,6 @@ let count = 0,
   directionalLight.position.set(66, 49, 50);
   directionalLight.castShadow = true;
   scene.add(directionalLight);
-
-  const lightHelper = new THREE.DirectionalLightHelper(
-    directionalLight,
-    2,
-    0x000000
-  );
-  scene.add(lightHelper);
 
   // Camera
   camera = new THREE.PerspectiveCamera(75, 2, 0.1, 100);
@@ -48,17 +46,34 @@ let count = 0,
   //#region  //*=========== Skybox ===========
 
   //#region  //*=========== Plane ===========
-  const plane = new THREE.Mesh(
+  const floorMaterial = new THREE.MeshPhongMaterial({
+    side: THREE.DoubleSide,
+    map: new THREE.TextureLoader().load("assets/images/floor.jpg"),
+  });
+  const wallMaterial = new THREE.MeshPhongMaterial({
+    side: THREE.DoubleSide,
+    map: new THREE.TextureLoader().load("assets/images/wall.jpg"),
+  });
+
+  const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(15, 15, 100, 100),
-    new THREE.MeshPhongMaterial({
-      side: THREE.DoubleSide,
-      map: new THREE.TextureLoader().load("assets/images/floor.jpg"),
-    })
+    floorMaterial
   );
-  plane.receiveShadow = true;
-  plane.rotation.x = -Math.PI / 2;
-  plane.position.y = -3;
-  scene.add(plane);
+  // floor.castShadow = true;
+  floor.receiveShadow = true;
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -3;
+  scene.add(floor);
+
+  const wall = new THREE.Mesh(
+    new THREE.PlaneGeometry(15, 7.5, 100, 100),
+    wallMaterial
+  );
+  wall.receiveShadow = true;
+  wall.rotation.y = -Math.PI / 2;
+  wall.position.x = -7.5;
+  wall.position.y = 0.75;
+  scene.add(wall);
   //#endregion  //*======== Plane ===========
 
   //#region  //*=========== Cube ===========
@@ -147,7 +162,7 @@ let count = 0,
     format: THREE.RGBFormat,
     generateMipmaps: true,
     minFilter: THREE.LinearMipmapLinearFilter,
-    encoding: THREE.sRGBEncoding, // temporary -- to prevent the material's shader from recompiling every frame
+    encoding: THREE.sRGBEncoding,
   });
 
   cubeCamera1 = new THREE.CubeCamera(1, 1000, cubeRenderTarget1);
@@ -160,12 +175,6 @@ let count = 0,
   });
 
   cubeCamera2 = new THREE.CubeCamera(1, 1000, cubeRenderTarget2);
-
-  const textureEquirec = new THREE.TextureLoader().load(
-    "assets/images/chinese_garden.jpg"
-  );
-  textureEquirec.mapping = THREE.EquirectangularReflectionMapping;
-  textureEquirec.encoding = THREE.sRGBEncoding;
 
   const refGeometry = new THREE.SphereGeometry(0.5, 32, 32);
   const refMaterial = new THREE.MeshBasicMaterial({
