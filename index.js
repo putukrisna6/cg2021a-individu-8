@@ -1,4 +1,5 @@
 import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.121.1/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "https://threejsfundamentals.org/threejs/resources/threejs/r132/examples/jsm/loaders/GLTFLoader.js";
 
 /** @type {THREE.PerspectiveCamera} */
 let camera;
@@ -30,7 +31,7 @@ let renderer;
   // Camera
   camera = new THREE.PerspectiveCamera(75, 2, 0.1, 100);
   camera.position.z = 10;
-  
+
   //#region  //*=========== Skybox ===========
   const loader = new THREE.TextureLoader();
   const texture = loader.load("assets/images/chinese_garden.jpg", () => {
@@ -64,8 +65,45 @@ let renderer;
   const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
   cube.castShadow = true;
   cube.receiveShadow = true;
+  cube.position.set(0, 0.5, 0);
   scene.add(cube);
   //#endregion  //*======== Cube ===========
+
+  //#region  //*=========== School Desk ===========
+  const schoolDesk = new GLTFLoader();
+  schoolDesk.load("assets/models/schoolDesk/SchoolDesk_01_1k.gltf", (gltf) => {
+    gltf.scene.traverse(function (node) {
+      if (node.isMesh) {
+        node.castShadow = true;
+        node.receiveShadow = true;
+        node.position.set(0, -3, 0);
+        node.scale.set(3, 2, 3);
+      }
+    });
+    scene.add(gltf.scene);
+  });
+  //#endregion  //*======== School Desk ===========
+
+  //#region  //*=========== School Chair ===========
+  const schoolChair = new GLTFLoader();
+  schoolChair.load(
+    "assets/models/schoolChair/SchoolChair_01_1k.gltf",
+    (gltf) => {
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+          node.position.set(0, -3, -1.3);
+          node.scale.set(3, 2, 3);
+        }
+      });
+      scene.add(gltf.scene);
+    }
+  );
+  //#endregion  //*======== School Chair ===========
+
+
+
 
   // Render
   renderer = new THREE.WebGLRenderer({ antialias: true });
