@@ -8,10 +8,16 @@ let scene;
 /** @type {THREE.WebGLRenderer} */
 let renderer;
 
+let sphere, material;
+let count = 0,
+  cubeCamera1,
+  cubeCamera2,
+  cubeRenderTarget1,
+  cubeRenderTarget2;
+
 (function init() {
   // set up three.js scene
   scene = new THREE.Scene();
-
   //lights
   const ambientLight = new THREE.AmbientLight("white", 0.6);
   scene.add(ambientLight);
@@ -46,7 +52,7 @@ let renderer;
     new THREE.PlaneGeometry(15, 15, 100, 100),
     new THREE.MeshPhongMaterial({
       side: THREE.DoubleSide,
-      map: new THREE.TextureLoader().load("assets/images/floor.jpg")
+      map: new THREE.TextureLoader().load("assets/images/floor.jpg"),
     })
   );
   plane.receiveShadow = true;
@@ -65,7 +71,7 @@ let renderer;
   const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
   cube.castShadow = true;
   cube.receiveShadow = true;
-  cube.position.set(0, 0.5, 0);
+  cube.position.set(0, 1, 0);
   scene.add(cube);
   //#endregion  //*======== Cube ===========
 
@@ -122,22 +128,59 @@ let renderer;
 
   //#region  //*=========== Shelf ===========
   const shelf = new GLTFLoader();
-  shelf.load(
-    "assets/models/shelf/Shelf_01_1k.gltf",
-    (gltf) => {
-      gltf.scene.traverse(function (node) {
-        if (node.isMesh) {
-          node.castShadow = true;
-          node.receiveShadow = true;
-          node.position.set(-5, -3, 0);
-          node.scale.set(3, 2, 3);
-          node.rotation.y = Math.PI / 2;
-        }
-      });
-      scene.add(gltf.scene);
-    }
-  );
+  shelf.load("assets/models/shelf/Shelf_01_1k.gltf", (gltf) => {
+    gltf.scene.traverse(function (node) {
+      if (node.isMesh) {
+        node.castShadow = true;
+        node.receiveShadow = true;
+        node.position.set(-5, -3, 0);
+        node.scale.set(3, 2, 3);
+        node.rotation.y = Math.PI / 2;
+      }
+    });
+    scene.add(gltf.scene);
+  });
   //#endregion  //*======== Shelf ===========
+
+  //#region  //*=========== Reflective ===========
+  cubeRenderTarget1 = new THREE.WebGLCubeRenderTarget(256, {
+    format: THREE.RGBFormat,
+    generateMipmaps: true,
+    minFilter: THREE.LinearMipmapLinearFilter,
+    encoding: THREE.sRGBEncoding, // temporary -- to prevent the material's shader from recompiling every frame
+  });
+
+  cubeCamera1 = new THREE.CubeCamera(1, 1000, cubeRenderTarget1);
+
+  cubeRenderTarget2 = new THREE.WebGLCubeRenderTarget(256, {
+    format: THREE.RGBFormat,
+    generateMipmaps: true,
+    minFilter: THREE.LinearMipmapLinearFilter,
+    encoding: THREE.sRGBEncoding,
+  });
+
+  cubeCamera2 = new THREE.CubeCamera(1, 1000, cubeRenderTarget2);
+
+  const textureEquirec = new THREE.TextureLoader().load(
+    "assets/images/chinese_garden.jpg"
+  );
+  textureEquirec.mapping = THREE.EquirectangularReflectionMapping;
+  textureEquirec.encoding = THREE.sRGBEncoding;
+
+  const refGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+  const refMaterial = new THREE.MeshBasicMaterial({
+    envMap: cubeRenderTarget2.texture,
+    combine: THREE.MultiplyOperation,
+    reflectivity: 1,
+  });
+  const reflective = new THREE.Mesh(refGeometry, refMaterial);
+
+  reflective.castShadow = true;
+  reflective.receiveShadow = true;
+
+  reflective.position.set(0, -0.35, 0);
+  scene.add(reflective);
+  //#endregion  //*======== Reflective ===========
 
   // Render
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -158,6 +201,15 @@ let renderer;
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
     cube.rotation.z += 0.01;
+
+    if (count % 2 === 0) {
+      cubeCamera1.update(renderer, scene);
+    } else {
+      cubeCamera2.update(renderer, scene);
+    }
+
+    count++;
+
     renderer.render(scene, camera);
     requestAnimationFrame(animation);
   }
