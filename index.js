@@ -45,8 +45,8 @@ let renderer;
   const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(15, 15, 100, 100),
     new THREE.MeshPhongMaterial({
-      color: "white",
       side: THREE.DoubleSide,
+      map: new THREE.TextureLoader().load("assets/images/floor.jpg")
     })
   );
   plane.receiveShadow = true;
@@ -102,8 +102,42 @@ let renderer;
   );
   //#endregion  //*======== School Chair ===========
 
+  //#region  //*=========== Potted Plant ===========
+  const pottedPlant = new GLTFLoader();
+  pottedPlant.load(
+    "assets/models/pottedPlant/potted_plant_04_1k.gltf",
+    (gltf) => {
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+          node.position.set(-0.6, -1.25, 0.4);
+          node.scale.set(3, 2, 3);
+        }
+      });
+      scene.add(gltf.scene);
+    }
+  );
+  //#endregion  //*======== Potted Plant ===========
 
-
+  //#region  //*=========== Shelf ===========
+  const shelf = new GLTFLoader();
+  shelf.load(
+    "assets/models/shelf/Shelf_01_1k.gltf",
+    (gltf) => {
+      gltf.scene.traverse(function (node) {
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+          node.position.set(-5, -3, 0);
+          node.scale.set(3, 2, 3);
+          node.rotation.y = Math.PI / 2;
+        }
+      });
+      scene.add(gltf.scene);
+    }
+  );
+  //#endregion  //*======== Shelf ===========
 
   // Render
   renderer = new THREE.WebGLRenderer({ antialias: true });
